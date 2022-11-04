@@ -1,0 +1,99 @@
+---
+title: "Análisis Meteorológico"
+author: "Alexandre Martinez"
+date: "11/4/2022"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document: default
+---
+
+
+
+
+
+```{r paquetes, include=FALSE}
+library(readxl)
+library(rnaturalearth)
+library(tidyverse)
+library(stringr)
+library(rgdal)
+library(rgeos)
+library(plotly)
+library(sp)
+library(readr)
+library(lubridate)
+library(RColorBrewer)
+
+require(ncdf4) #para tratamiento de datos nc
+require(fields) #para visualización
+require(maps) #para mapa base
+library(matlib)
+library(Deriv)
+library(mosaicCalc)
+library(BB)
+library(cubature)
+library(mosaic)
+library(Ryacas)
+
+```
+
+\section{Análisis Meteorológico en R}
+
+Leemos un dataset de una estación meteorológica situada en Molina de Segura, Murcia.
+```{r excel, include=FALSE}
+#Elegimos Archivo
+data = read_xls('/Users/alexandremartinez/Desktop/Datos_estacion.xls')
+```
+
+
+```{r dataset, include=TRUE}
+data = as.matrix.data.frame(data)
+
+#Sacamos los datos pertinentes
+
+dates_ofi = data[,1]
+temp = as.numeric(data[, 3])
+dew = as.numeric(data[, 6])
+hum = as.numeric(data[, 10])
+wind = as.numeric(data[, 12])
+press = as.numeric(data[,14])
+rain = as.numeric(data[ , 15])
+rainrate = as.numeric(data[, 17])
+solarad = as.numeric(data[, 18])
+data = data.frame(dates_ofi, temp, dew, hum,wind,press,rain,rainrate, solarad )
+
+```
+
+Tras crear un dataframe con las variables que nos interesan, filtramos este dataframe de modo a que no presente ningun valor nulo. 'data = na.omit(data)'
+
+
+```{r tratado_datos, include=TRUE}
+
+data = na.omit(data)
+
+
+#Datos modificados, sin NA 
+dates_ofi = data[,1]
+temp = as.numeric(data[, 2])
+dew = as.numeric(data[, 3])
+hum = as.numeric(data[, 4])
+wind = as.numeric(data[, 5])
+press = as.numeric(data[,6])
+rain = as.numeric(data[ , 7])
+rainrate = as.numeric(data[, 8])
+solarad = as.numeric(data[, 9])
+
+date = as.Date(dates_ofi) #Transformamos las fechas en un formato más adecuado
+```
+
+
+
+Representamos la temperatura frente a la temperatura de rocío. Según dicta la teoría, si la temperatura de rocío se acerca consecuentemente al valor de la temperatura, entonces, tendremos suficiente humedad como para que llueva.
+
+```{r temp}
+plot(date, temp, type = 'l', ylim = c(-15,30), main='Temperatura VS Temperatura de Rocio')
+lines(date, dew, col=2)
+legend('bottomright', c('Temp', 'Temp.Rocio') , lty = 1, col=c(1,2))
+
+```
